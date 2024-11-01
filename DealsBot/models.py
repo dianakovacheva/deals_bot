@@ -53,3 +53,31 @@ class DealSubscription(models.Model):
     def __str__(self):
         return (f"{self.profile.user.username} -> {self.product} -> {self.zipcode} -> "
                 f"{'Active' if self.is_active else 'Inactive'}")
+
+
+class SentDeal(models.Model):
+    id = models.BigIntegerField(primary_key=True, null=False)
+    brand = models.CharField(max_length=64)
+    product = models.CharField(max_length=64)
+    advertiser = models.CharField(max_length=64)
+    category = models.CharField(max_length=64)
+    description = models.TextField(max_length=150)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    reference_price = models.DecimalField(max_digits=10, decimal_places=2)
+    valid_from = models.DateTimeField()
+    valid_thru = models.DateTimeField()
+    requires_loyalty_membership = models.BooleanField()
+    unit = models.CharField(max_length=64)
+
+
+class UserSentDeal(models.Model):
+    sent_deal = models.ForeignKey(SentDeal, on_delete=models.CASCADE)
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    date_sent = models.DateTimeField(auto_now_add=True)
+    notification_method = models.ForeignKey(NotificationMethod, on_delete=models.SET(None))
+
+    class Meta:
+        unique_together = ("sent_deal", "profile", "notification_method")
+
+
+SentDeal.sent_to = models.ManyToManyField(Profile, through=UserSentDeal, related_name="sent_deals")

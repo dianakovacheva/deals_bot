@@ -11,7 +11,8 @@ from django.db.models.deletion import ProtectedError
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    telegram = models.CharField(max_length=64, blank=True)
+    telegram_username = models.CharField(max_length=64, blank=True, unique=True)
+    telegram_chat_id = models.IntegerField(default=None, null=True, blank=True)
 
     def __str__(self):
         return f"{self.user.username} ({self.user.email})"

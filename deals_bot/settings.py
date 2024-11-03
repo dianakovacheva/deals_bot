@@ -129,8 +129,12 @@ CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 CELERY_BEAT_SCHEDULE = {
-    'check_deals_every_10_minutes': {
-        'task': 'DealsBot.tasks.get_time',
-        'schedule': crontab(minute='*/1'),
+    'check_deals_every_1_hour': {
+        'task': 'DealsBot.tasks.check_for_deals_and_notify',
+        'schedule': crontab(hour='*/1'),
+    },
+    'obtain_and_save_telegram_chat_ids_every_6_hours': {
+        'task': 'DealsBot.tasks.obtain_and_save_telegram_chat_ids',
+        'schedule': crontab(hour='*/6'),
     },
 }

@@ -1,0 +1,14 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>Sent Deals</h2>
+
+    {% if message %}
+        {{ message }}
+    {% endif %}
+
+    {% for deal in sent_deals %}
+       <!-- {% include "auctions/listing_card.html" %} -->
+        <p>deal</p>
+    {% endfor %}
+{% endblock %}

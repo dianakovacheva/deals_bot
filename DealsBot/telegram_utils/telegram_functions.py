@@ -1,6 +1,10 @@
+import json
 import requests
 from dotenv import load_dotenv
 import os
+
+from DealsBot.db_utils import save_user_telegram_chat_id
+from DealsBot.models import Profile
 
 
 def get_telegram_updates():
@@ -11,15 +15,24 @@ def get_telegram_updates():
     return updates
 
 
-def find_telegram_chat_id(user_telegram_username):
-    updates = get_telegram_updates()
-    found_chat_id = -1
+def get_telegram_chat_id(user_telegram_username):
+    profile = Profile.objects.get(telegram_username=user_telegram_username)
+    if profile:
+        found_chat_id = profile.telegram_chat_id
+        if found_chat_id is None:
+            found_chat_id = -1
+    else:
+        found_chat_id = -1
 
-    for result in updates["result"]:
-        if result["message"]["from"]["username"] == user_telegram_username:
-            found_chat_id = result["message"]["chat"]["id"]
-            break
+    if found_chat_id == -1:
+        updates = get_telegram_updates()
 
+        for result in updates["result"]:
+            if result["message"]["from"]["username"] == user_telegram_username:
+                found_chat_id = result["message"]["chat"]["id"]
+                break
+        if found_chat_id != -1:
+            save_user_telegram_chat_id(user_telegram_username, found_chat_id)
     return found_chat_id
 
 
@@ -43,6 +56,14 @@ def send_telegram_message(chat_id, message):
     load_dotenv()
     api_key = os.getenv("TELEGRAM_BOT_API_KEY")
 
-    SEND_MESSAGE_URL = f"https://api.telegram.org/bot{api_key}/sendMessage?chat_id={chat_id}&text={message}&parse_mode=HTML"
-    r = requests.get(SEND_MESSAGE_URL)
-    print(r)
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    payload = json.dumps({
+        "text": message,
+        "parse_mode": "HTML"
+    }, ensure_ascii=False)
+
+    SEND_MESSAGE_URL = f"https://api.telegram.org/bot{api_key}/sendMessage?chat_id={chat_id}"
+    r = requests.get(SEND_MESSAGE_URL, headers=headers, data=payload)
+    print(r.json())

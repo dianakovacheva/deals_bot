@@ -23,7 +23,11 @@ def check_for_deals_and_notify():
     filtered_list = filter_out_user_sent_deals(unfiltered_list)
 
     for deal in filtered_list:
-        send_deal(deal)
+        try:
+            send_deal(deal)
+        except Exception as e:
+            print(e.args)
+            pass
 
 
 def obtain_and_save_telegram_chat_ids():

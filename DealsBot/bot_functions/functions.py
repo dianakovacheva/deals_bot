@@ -1,5 +1,4 @@
 from django.core.mail import send_mail
-import telegram
 import requests
 from django.db import IntegrityError
 
@@ -41,17 +40,23 @@ def prepare_telegram_message(deal):
     for result in deal["results"]:
         brand = result['brand']
         product = result['product']
+        description = result['description']
         price = result['price']
         advertiser = result['advertiser']
         start_date = result['validityDates'][0]['from'].strftime('%d.%m.%Y')
         end_date = result['validityDates'][0]['to'].strftime('%d.%m.%Y')
 
+
         message += (
             f"<b>{brand} {product}</b>\n"
+            f"{description}\n"
             f"<b>Price:</b> <u>€{price}</u>\n"
             f"<b>Store:</b> <i>{advertiser}</i>\n"
             f"<b>Valid:</b> <u>{start_date}</u> <b>to</b> <u>{end_date}</u>\n\n"
         )
+
+        if result['requiresLoyaltyMembership']:
+            message += "<i>Membership required</i>"
 
     return message
 

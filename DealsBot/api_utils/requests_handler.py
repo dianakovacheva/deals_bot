@@ -10,8 +10,8 @@ def fetch_offers(query, zip_code, limit=100, offset=0):
 
     url = os.getenv("API_SERVICE_URL")
     headers = {
-        "x-clientkey": os.getenv("X-CLIENTKEY"),
-        "x-apikey": os.getenv("X-APIKEY")
+        "x-clientkey": os.getenv("X_CLIENTKEY"),
+        "x-apikey": os.getenv("X_APIKEY")
     }
 
     # Set up the query parameters

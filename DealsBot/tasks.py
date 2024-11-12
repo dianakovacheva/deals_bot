@@ -29,7 +29,7 @@ def check_for_deals_and_notify():
             print(e.args)
             pass
 
-
+@shared_task
 def obtain_and_save_telegram_chat_ids():
     telegram_user_names = Profile.objects.values_list("telegram_username", flat=True)
     telegram_user_names_list = list(telegram_user_names)

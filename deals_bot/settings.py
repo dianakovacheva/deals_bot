@@ -12,10 +12,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from celery.schedules import crontab
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -26,7 +27,7 @@ SECRET_KEY = 'django-insecure-jam9ou45-3juem)iq+9)txv80aa(yqb&m_v+qi-pt6$tivh@93
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.0.132']
 
 
 # Application definition
@@ -125,16 +126,16 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 
 CELERY_BEAT_SCHEDULE = {
-    'check_deals_every_1_hour': {
+    'check_deals_every_3_hour': {
         'task': 'DealsBot.tasks.check_for_deals_and_notify',
-        'schedule': crontab(hour='*/1'),
+        'schedule': crontab(minute=0, hour='*/3'),
     },
     'obtain_and_save_telegram_chat_ids_every_6_hours': {
         'task': 'DealsBot.tasks.obtain_and_save_telegram_chat_ids',
-        'schedule': crontab(hour='*/6'),
+        'schedule': crontab(minute=0, hour='*/6'),
     },
 }

@@ -9,7 +9,6 @@ The project is powered by the following technologies:
 - **Python**: The core programming language for backend logic.
 - **Django**: A high-level Python web framework that enables rapid development and clean, pragmatic design.
 - **Celery**: An asynchronous task queue used to handle background jobs and real-time tasks.
-- **RabbitMQ**: The message broker that Celery uses to manage task queues.
 - **Redis**: An in-memory data structure store used for caching and enhancing task performance.
 
 ## Features
@@ -17,7 +16,7 @@ The project is powered by the following technologies:
 - **Telegram Notifications**: Sends messages with the latest deals directly to users on Telegram.
 - **User Registration and Profile Management**: Users can register on the website to manage their account and tracked deals.
 - **Personal Deal Tracking**: Each user has a personalized list of tracked deals, viewable on the website.
-- **Real-time Processing**: Celery and RabbitMQ power asynchronous processing, enabling real-time deal fetching and notifications.
+- **Real-time Processing**: Celery powers asynchronous processing, enabling real-time deal fetching and notifications.
 - **Caching**: Redis is used to cache data, speeding up response times.
 
 ## Getting Started
@@ -25,7 +24,6 @@ The project is powered by the following technologies:
 ### Prerequisites
 Make sure you have the following installed on your system:
 - Python 3.8 or higher
-- RabbitMQ
 - Redis
 
 ### Installation
@@ -44,8 +42,7 @@ Make sure you have the following installed on your system:
     pip install -r requirements.txt
     ```
 
-3. **Set up RabbitMQ and Redis:**
-   - Follow the [RabbitMQ installation guide](https://www.rabbitmq.com/download.html).
+3. **Set up Redis:**
    - Install Redis by following the [Redis installation instructions](https://redis.io/download).
 
 4. **Environment Variables**:

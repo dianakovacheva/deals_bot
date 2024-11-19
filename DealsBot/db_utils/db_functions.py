@@ -1,6 +1,57 @@
 from django.contrib.auth.models import User
-from DealsBot.models import Profile, SentDeal, UserSentDeal, NotificationMethod
+from DealsBot.models import Profile, SentDeal, UserSentDeal, NotificationMethod, DealSubscription, BotUser
 from django.core.exceptions import ObjectDoesNotExist
+
+
+def create_bot_user(telegram_username, telegram_user_id, telegram_user_first_name, telegram_user_last_name, telegram_chat_id):
+    if telegram_user_id is None:
+        raise ValueError("telegram_user_id is required.")
+
+    if telegram_chat_id is None:
+        raise ValueError("telegram_chat_id is required.")
+
+    args = {"telegram_user_id": telegram_user_id, "telegram_chat_id": telegram_chat_id}
+
+    if telegram_username is not None:
+        args["telegram_username"] = telegram_username
+    if telegram_user_first_name is not None:
+        args["telegram_user_first_name"] = telegram_user_first_name
+    if telegram_user_last_name is not None:
+        args["telegram_user_last_name"] = telegram_user_last_name
+
+    created_bot_user = BotUser.objects.create(**args)
+
+    return created_bot_user
+
+
+def create_deal(product, zipcode, communication_channels: str | list, profile=None, bot_user=None):
+    if profile is None and bot_user is None:
+        raise ValueError("Either profile or bot_user must be passed to the function.")
+
+    try:
+        if isinstance(communication_channels, str):
+            communication_channels = [communication_channels]
+
+        communication_channels_records = NotificationMethod.objects.filter(type__in=communication_channels)
+
+        args = dict()
+        if profile is not None:
+            args["profile"] = profile
+        else:
+            args["bot_user"] = bot_user
+
+        args["product"] = product
+        args["zipcode"] = zipcode
+
+        created_deal_data = DealSubscription.objects.create(**args)
+
+        created_deal_data.communication_channels.set(communication_channels_records)
+        created_deal_data.save()
+
+        return created_deal_data
+
+    except:
+        return None
 
 
 def save_user_telegram_chat_id(telegram_username, chat_id: int):

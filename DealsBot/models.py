@@ -1,4 +1,3 @@
-import django.contrib.auth.models
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -6,7 +5,6 @@ from django.dispatch import receiver
 from django.db.models.deletion import ProtectedError
 
 
-# Create your models here.
 class BotUser(models.Model):
     telegram_username = models.CharField(max_length=64, blank=True, unique=True)
     telegram_user_id = models.IntegerField(null=True, blank=True, unique=True)
@@ -52,7 +50,8 @@ class NotificationMethod(models.Model):
 
 
 class DealSubscription(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="subscriptions")
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, blank=True, related_name="subscriptions")
+    bot_user = models.ForeignKey(BotUser, on_delete=models.CASCADE, null=True, blank=True, related_name="subscriptions")
     product = models.CharField(max_length=64)
     zipcode = models.CharField(max_length=8)
     communication_channels = models.ManyToManyField(NotificationMethod)
@@ -61,8 +60,8 @@ class DealSubscription(models.Model):
     modified_on = models.DateTimeField(auto_now=True, blank=True)
 
     def __str__(self):
-        return (f"{self.profile.user.username} -> {self.product} -> {self.zipcode} -> "
-                f"{'Active' if self.is_active else 'Inactive'}")
+        user = self.profile.user.username if self.profile else f"BotUser({self.bot_user.telegram_chat_id})"
+        return f"{user} -> {self.product} -> {self.zipcode} -> {'Active' if self.is_active else 'Inactive'}"
 
 
 class SentDeal(models.Model):
@@ -82,12 +81,14 @@ class SentDeal(models.Model):
 
 class UserSentDeal(models.Model):
     sent_deal = models.ForeignKey(SentDeal, on_delete=models.CASCADE)
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, blank=True)
+    bot_user = models.ForeignKey(BotUser, on_delete=models.CASCADE, null=True, blank=True)
     date_sent = models.DateTimeField(auto_now_add=True)
     notification_method = models.ForeignKey(NotificationMethod, on_delete=models.SET(None))
 
     class Meta:
-        unique_together = ("sent_deal", "profile", "notification_method")
+        unique_together = ("sent_deal", "profile", "bot_user", "notification_method")
 
 
 SentDeal.sent_to = models.ManyToManyField(Profile, through=UserSentDeal, related_name="sent_deals")
+SentDeal.sent_to_bot_users = models.ManyToManyField(BotUser, through=UserSentDeal, related_name="sent_deals")

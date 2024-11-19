@@ -127,10 +127,10 @@ CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 CELERY_BEAT_SCHEDULE = {
     'check_deals_every_3_hour': {
         'task': 'DealsBot.tasks.check_for_deals_and_notify',
-        'schedule': crontab(minute=0, hour='*/3'),
+        'schedule': crontab(minute='0', hour='*/3'),
     },
     'obtain_and_save_telegram_chat_ids_every_6_hours': {
         'task': 'DealsBot.tasks.obtain_and_save_telegram_chat_ids',
-        'schedule': crontab(minute=0, hour='*/6'),
+        'schedule': crontab(minute='0', hour='*/6'),
     },
 }

@@ -7,6 +7,15 @@ from django.db.models.deletion import ProtectedError
 
 
 # Create your models here.
+class BotUser(models.Model):
+    telegram_username = models.CharField(max_length=64, blank=True, unique=True)
+    telegram_user_id = models.IntegerField(null=True, blank=True, unique=True)
+    telegram_user_first_name = models.CharField(default=None, max_length=64, blank=True)
+    telegram_user_last_name = models.CharField(default=None, max_length=64, blank=True)
+    telegram_chat_id = models.IntegerField()
+
+    def __str__(self):
+        return f"BotUser: {self.telegram_username or 'Anonymous'} ({self.telegram_chat_id})"
 
 
 class Profile(models.Model):

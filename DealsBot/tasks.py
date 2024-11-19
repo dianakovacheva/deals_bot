@@ -1,8 +1,10 @@
 from celery import shared_task
-from DealsBot.bot_functions import get_active_deal_subscriptions, filter_out_user_sent_deals
+
 from DealsBot.api_utils import fetch_offers, parse_response
+from DealsBot.bot_functions import get_active_deal_subscriptions, filter_out_user_sent_deals
 from .bot_functions.functions import send_deal
 from .db_utils import save_user_telegram_chat_id
+from .messanger_bots.telegram_bot import run_telegram_bot
 from .models import Profile
 from .telegram_utils.telegram_functions import find_telegram_chat_ids
 
@@ -29,6 +31,7 @@ def check_for_deals_and_notify():
             print(e.args)
             pass
 
+
 @shared_task
 def obtain_and_save_telegram_chat_ids():
     telegram_user_names = Profile.objects.values_list("telegram_username", flat=True)
@@ -39,3 +42,8 @@ def obtain_and_save_telegram_chat_ids():
     for result in found_telegram_chat_ids:
         print(result["username"])
         save_user_telegram_chat_id(result["username"], result["chat_id"])
+
+
+@shared_task
+def run_telegram_bot_celery_task():
+    run_telegram_bot()

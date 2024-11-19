@@ -1,0 +1,3 @@
+search - Search for deals by product name and zip code
+subscribe - Subscribe for deals by product name and zip code
+unsubscribe - Stop sending deals for product

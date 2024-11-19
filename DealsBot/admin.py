@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Profile, NotificationMethod, DealSubscription, SentDeal, UserSentDeal
+from .models import Profile, NotificationMethod, DealSubscription, SentDeal, UserSentDeal, BotUser
 
 
 # Register your models here.
@@ -23,6 +23,7 @@ class UserSentDealAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Profile)
+admin.site.register(BotUser)
 admin.site.register(NotificationMethod)
 admin.site.register(DealSubscription, DealSubscriptionAdmin)
 admin.site.register(SentDeal, SentDealAdmin)

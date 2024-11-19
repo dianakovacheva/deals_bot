@@ -1,11 +1,9 @@
 from django.core.mail import send_mail
-import requests
 from django.db import IntegrityError
 
-from DealsBot.db_utils import save_user_telegram_chat_id
 from DealsBot.db_utils.db_functions import save_sent_deal, save_user_sent_deal
 from DealsBot.models import DealSubscription, UserSentDeal, User, Profile, SentDeal
-from DealsBot.telegram_utils.telegram_functions import get_telegram_updates, get_telegram_chat_id, \
+from DealsBot.telegram_utils.telegram_functions import get_telegram_chat_id, \
     send_telegram_message
 
 
@@ -33,9 +31,12 @@ def filter_out_user_sent_deals(unfiltered_list):
     return filtered_list
 
 
-def prepare_telegram_message(deal):
-    deal_subscription = DealSubscription.objects.get(id=deal["dealSubscriptionId"])
-    message = f"<b>Deals found for</b> <i>{deal_subscription.product}</i> <b>in</b> <u>{deal_subscription.zipcode}</u>\n\n"
+def prepare_telegram_message(deal=None, search_params: dict = None):
+    if "dealSubscriptionId" not in deal:
+        message = f"<b>Deals found for</b> <i>{search_params["product"]}</i> <b>in</b> <u>{search_params["zipcode"]}</u>\n\n"
+    else:
+        deal_subscription = DealSubscription.objects.get(id=deal["dealSubscriptionId"])
+        message = f"<b>Deals found for</b> <i>{deal_subscription.product}</i> <b>in</b> <u>{deal_subscription.zipcode}</u>\n\n"
 
     for result in deal["results"]:
         brand = result['brand']
@@ -45,7 +46,6 @@ def prepare_telegram_message(deal):
         advertiser = result['advertiser']
         start_date = result['validityDates'][0]['from'].strftime('%d.%m.%Y')
         end_date = result['validityDates'][0]['to'].strftime('%d.%m.%Y')
-
 
         message += (
             f"<b>{brand} {product}</b>\n"
@@ -103,6 +103,5 @@ def send_deal_per_telegram(deal, profile):
     found_chat_id = get_telegram_chat_id(user_telegram_username)
     print(found_chat_id)
     if found_chat_id != -1:
-
         formatted_message = prepare_telegram_message(deal)
         send_telegram_message(found_chat_id, formatted_message)

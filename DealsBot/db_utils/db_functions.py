@@ -1,32 +1,32 @@
 from django.contrib.auth.models import User
-from DealsBot.models import Profile, SentDeal, UserSentDeal, NotificationMethod, DealSubscription, BotUser
+from DealsBot.models import Profile, SentDeal, UserSentDeal, NotificationMethod, DealSubscription, TelegramUser
 from django.core.exceptions import ObjectDoesNotExist
 
 
-def create_bot_user(telegram_username, telegram_user_id, telegram_user_first_name, telegram_user_last_name, telegram_chat_id):
-    if telegram_user_id is None:
-        raise ValueError("telegram_user_id is required.")
+def create_telegram_user(username, user_id, user_first_name, user_last_name, chat_id):
+    if user_id is None:
+        raise ValueError("user_id is required.")
 
-    if telegram_chat_id is None:
-        raise ValueError("telegram_chat_id is required.")
+    if chat_id is None:
+        raise ValueError("chat_id is required.")
 
-    args = {"telegram_user_id": telegram_user_id, "telegram_chat_id": telegram_chat_id}
+    args = {"user_id": user_id, "chat_id": chat_id}
 
-    if telegram_username is not None:
-        args["telegram_username"] = telegram_username
-    if telegram_user_first_name is not None:
-        args["telegram_user_first_name"] = telegram_user_first_name
-    if telegram_user_last_name is not None:
-        args["telegram_user_last_name"] = telegram_user_last_name
+    if username is not None:
+        args["username"] = username
+    if user_first_name is not None:
+        args["user_first_name"] = user_first_name
+    if user_last_name is not None:
+        args["user_last_name"] = user_last_name
 
-    created_bot_user = BotUser.objects.create(**args)
+    created_telegram_user = TelegramUser.objects.create(**args)
 
-    return created_bot_user
+    return created_telegram_user
 
 
-def create_deal(product, zipcode, communication_channels: str | list, profile=None, bot_user=None):
-    if profile is None and bot_user is None:
-        raise ValueError("Either profile or bot_user must be passed to the function.")
+def create_deal(product, zipcode, communication_channels: str | list, profile=None):
+    if profile is None:
+        raise ValueError("Profile must be passed to the function.")
 
     try:
         if isinstance(communication_channels, str):
@@ -35,11 +35,7 @@ def create_deal(product, zipcode, communication_channels: str | list, profile=No
         communication_channels_records = NotificationMethod.objects.filter(type__in=communication_channels)
 
         args = dict()
-        if profile is not None:
-            args["profile"] = profile
-        else:
-            args["bot_user"] = bot_user
-
+        args["profile"] = profile
         args["product"] = product
         args["zipcode"] = zipcode
 

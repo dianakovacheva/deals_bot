@@ -1,0 +1,32 @@
+<div class="table-container bg-white p-6">
+    <h5 class="table-title">Subscriptions By Product</h5>
+    <div id="subscriptions-table"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gridjs/6.0.6/gridjs.umd.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/gridjs/6.0.6/theme/mermaid.min.css" rel="stylesheet"/>
+
+<script>
+    const data = [
+        {% for item in subscription_data %}
+            ["{{ item.product_lower | safe}}", {{ item.count }}],
+        {% endfor %}
+    ];
+
+    new gridjs.Grid({
+        data: data,
+        columns: ['Product Name', 'Count'],
+        sort: true,
+        search: true,
+        pagination: {
+            limit: 10,
+            enabled: true,
+            summary: true,
+        },
+        style: {
+            table: {
+                width: '100%'
+            }
+        }
+    }).render(document.getElementById("subscriptions-table"));
+</script>

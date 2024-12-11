@@ -3,7 +3,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, ContextTypes, ConversationHandler, CallbackQueryHandler, MessageHandler, \
     filters
 
-from DealsBot.models import BotUser, DealSubscription
+from DealsBot.models import TelegramUser, DealSubscription
 
 # Define states for the conversation
 SUBSCRIPTION_SELECTION, CONFIRM_UNSUBSCRIBE = range(2)
@@ -15,11 +15,11 @@ async def start_unsubscribe(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     # Fetch the user's subscriptions
     try:
-        bot_user = await sync_to_async(BotUser.objects.get, thread_sensitive=True)(telegram_user_id=user_id)
+        telegram_user = await sync_to_async(TelegramUser.objects.get, thread_sensitive=True)(user_id=user_id)
         subscriptions = await sync_to_async(list, thread_sensitive=True)(
-            DealSubscription.objects.filter(bot_user=bot_user)
+            DealSubscription.objects.filter(profile=telegram_user.id)
         )
-    except BotUser.DoesNotExist:
+    except TelegramUser.DoesNotExist:
         subscriptions = []
 
     if not subscriptions:

@@ -1,0 +1,277 @@
+<!-- Start Deals Data Charts -->
+<section class="charts">
+    <!-- Bar Chart Container -->
+    <div class="chart-container">
+        <canvas id="horizontalBarChartMonthlySentDeals"></canvas>
+    </div>
+    <!-- Horizontal Bar Container -->
+    <div class="chart-container">
+        <canvas id="horizontalBarChartDealsByCategory"></canvas>
+    </div>
+</section>
+<!-- End Deals Data Charts -->
+
+<!-- Start Users Data Charts -->
+<section class="charts">
+    <!-- Pie Chart Container -->
+    <div class="chart-container">
+        <canvas id="pieChartNotificationChannels"></canvas>
+    </div>
+    <!-- Line Chart Container -->
+    <div class="chart-container">
+        <canvas id="lineChartUserGrowth"></canvas>
+    </div>
+    <!-- Doughnut Container -->
+    <div class="chart-container">
+        <canvas id="doughnutChartProfileTypeDistribution"></canvas>
+    </div>
+</section>
+<!-- End Users Data Charts -->
+
+<script>
+    // Wait for the DOM content to be fully loaded
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // Start Deals Data
+        // Initialize Bar Chart
+        const barCtx = document.getElementById('horizontalBarChartMonthlySentDeals').getContext('2d');
+        let monthly_sent_deals = {{ deal_stats.monthly_sent_deals|safe}};
+
+        // Extract months and counts from the array of objects
+        const months = monthly_sent_deals.map(item => item.month);
+        const counts = monthly_sent_deals.map(item => item.count);
+
+        new Chart(barCtx, {
+            type: 'bar', // Specify chart type
+            data: {
+                labels: months, // X-axis labels
+                datasets: [{
+                    label: 'Count', // Dataset label
+                    data: counts, // Data points
+                    borderWidth: 1, // Border width
+                    hoverOffset: 4,
+                }]
+            },
+            options: {
+                aspectRatio: 0.8,  // Lower values make the chart taller (default is 2)
+                maintainAspectRatio: true,
+                responsive: true, // Chart responsiveness
+                animation: {
+                    duration: 1000, // Animation duration in ms
+                    easing: 'easeInOutQuart' // Animation easing function
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Monthly Sent Deals',
+                    },
+                    legend: {
+                        display: false // Hide the legend
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false // Hide vertical grid lines
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: '#eaeaea' // Grid line color
+                        },
+                        beginAtZero: true // Y-axis starts at zero
+                    }
+                },
+            }
+        });
+
+        // Initialize Horizontal Bar Chart
+        const horizontalBarCtx = document.getElementById('horizontalBarChartDealsByCategory').getContext('2d');
+        let sent_deals_by_category = {{ deal_stats.sent_deals_by_category|safe }}
+
+        const categories = sent_deals_by_category.map(item => item.category)
+        const deals_counts = sent_deals_by_category.map(item => item.count)
+
+
+        new Chart(horizontalBarCtx, {
+            type: 'bar', // Specify chart type
+            data: {
+                labels: categories, // X-axis labels
+                datasets: [{
+                    axis: 'y',
+                    label: 'Count', // Dataset label
+                    data: deals_counts, // Data points
+                    borderWidth: 1, // Border width
+                    hoverOffset: 4,
+                }]
+            },
+            options: {
+                aspectRatio: 0.8,  // Lower values make the chart taller (default is 2)
+                maintainAspectRatio: true,
+                indexAxis: 'y',
+                responsive: true, // Chart responsiveness
+                animation: {
+                    duration: 1000, // Animation duration in ms
+                    easing: 'easeInOutQuart' // Animation easing function
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Deals by Category',
+                    },
+                    legend: {
+                        display: false // Hide the legend
+                    }
+                },
+                scales: {
+                    y: {
+                        grid: {
+                            color: '#eaeaea', // Grid line color
+                            display: false // Hide horizontal grid lines
+                        },
+                        beginAtZero: true // Y-axis starts at zero
+                    }
+                },
+            }
+        });
+        // End Deals Data
+
+        // Start Users Data
+        // Initialize Line Chart
+        const lineChartCtx = document.getElementById('lineChartUserGrowth').getContext('2d');
+        let user_growth_data = {{ user_stats.user_growth|safe }}
+
+        const months_data = user_growth_data.map(item => item.month)
+        const total_users = user_growth_data.map(item => item.total_users)
+
+        new Chart(lineChartCtx, {
+            type: 'line',
+            data: {
+                labels: months_data, // X-axis labels
+                datasets: [{
+                    axis: 'y',
+                    label: 'Count', // Dataset label
+                    data: total_users, // Data points
+                    borderWidth: 1, // Border width
+                    hoverOffset: 4,
+                }]
+            },
+            options: {
+                aspectRatio: 0.8,  // Lower values make the chart taller (default is 2)
+                maintainAspectRatio: true,
+                responsive: true, // Chart responsiveness
+                animation: {
+                    duration: 1000, // Animation duration in ms
+                    easing: 'easeInOutQuart' // Animation easing function
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'New Subscriptions Per Month',
+                    },
+                    legend: {
+                        display: false,
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: {
+                            color: '#eaeaea', // Grid line color
+                            // display: false // Hide horizontal grid lines
+                        },
+                        beginAtZero: true // Y-axis starts at zero
+                    },
+                    y: {
+                        display: true,
+                        min: 0,
+                        ticks: {
+                            // forces step size to be 50 units
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // Initialize Pie Chart
+        const pieCtx = document.getElementById('pieChartNotificationChannels').getContext('2d');
+        let data_python = {{data|safe}};
+        const data_labels = Object.keys(data_python);
+        const data_values = Object.values(data_python);
+
+        const data = {
+            labels: [data_labels, 'Email'],
+            datasets: [{
+                label: "Count",
+                data: [data_values, 4],
+                hoverOffset: 4,
+            }]
+        };
+
+        new Chart(pieCtx, {
+            type: 'pie',
+            data: data,
+            options: {
+                aspectRatio: 0.8,  // Lower values make the chart taller (default is 2)
+                maintainAspectRatio: true,
+                responsive: true, // Chart responsiveness
+                animation: {
+                    duration: 1000, // Animation duration in ms
+                    easing: 'easeInOutQuart' // Animation easing function
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Sent Deals By Notification Channels',
+                    },
+                    legend: {
+                        display: true, // Display the legend
+                        position: 'bottom', // Position of the legend
+                        align: 'center', // Alignment of the legend
+                    }
+                },
+            }
+        });
+
+        // Initialize Doughnut Chart
+        const doughnutChartCtx = document.getElementById('doughnutChartProfileTypeDistribution').getContext('2d');
+        let profile_types = {{user_stats.profile_types|safe}};
+        const profile_types_labels = profile_types.map(item => item.profile_type + 'User')
+        const count = profile_types.map(item => item.count)
+
+        const chartData = {
+            labels: profile_types_labels,
+            datasets: [{
+                label: "Count",
+                data: count,
+                hoverOffset: 4,
+            }]
+        };
+
+        new Chart(doughnutChartCtx, {
+            type: 'doughnut',
+            data: chartData,
+            options: {
+                aspectRatio: 0.8,  // Lower values make the chart taller (default is 2)
+                maintainAspectRatio: true,
+                responsive: true, // Chart responsiveness
+                animation: {
+                    duration: 1000, // Animation duration in ms
+                    easing: 'easeInOutQuart' // Animation easing function
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Profile Type Distribution',
+                    },
+                    legend: {
+                        display: true, // Display the legend
+                        position: 'bottom', // Position of the legend
+                    }
+                },
+            }
+        });
+        // End Users Data
+    });
+</script>

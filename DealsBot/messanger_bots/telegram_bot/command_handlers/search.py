@@ -1,3 +1,4 @@
+import asyncio
 import re
 
 from telegram import Update
@@ -18,7 +19,7 @@ async def start_search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 
 async def ask_zip_code(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Saves the product and asks for the zip code."""
-    context.user_data['product'] = update.message.text
+    context.user_data['product'] = update.message.text.strip()
     await update.message.reply_text("Enter the zip code to search in.")
     return ZIP_CODE
 
@@ -26,7 +27,7 @@ async def ask_zip_code(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 async def perform_search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     try:
         """Saves the zip code and performs the search."""
-        context.user_data['zip_code'] = update.message.text
+        context.user_data['zip_code'] = update.message.text.strip()
         product = context.user_data['product']
         zip_code = context.user_data['zip_code']
 
@@ -52,16 +53,21 @@ async def perform_search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 )
                 return ConversationHandler.END
             else:
-                formatted_message = prepare_telegram_message(deal=deal, search_params=search_params)
 
-                # Here you can integrate your search logic.
-                await update.message.reply_html(
-                    formatted_message
-                )
+                formatted_messages = prepare_telegram_message(deal=deal, search_params=search_params)
 
+                for message in formatted_messages:
+                    try:
+                        await update.message.reply_html(message)
+                        await asyncio.sleep(0.5)  # Delay to avoid flooding
+                    except Exception as e:
+                        print(f"Error sending message: {e}")
+
+                print(formatted_messages)
                 # End the conversation
                 return ConversationHandler.END
-    except:
+    except Exception as e:
+        print(e)
         await update.message.reply_text("There was a problem.")
         return ConversationHandler.END
 

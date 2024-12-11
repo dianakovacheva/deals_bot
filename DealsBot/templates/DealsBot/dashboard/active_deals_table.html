@@ -1,0 +1,110 @@
+<div class="table-container bg-white p-6">
+    <h5 class="table-title">Sent Deals</h5>
+    <div id="active-deals-table"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gridjs/6.0.6/gridjs.umd.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/gridjs/6.0.6/theme/mermaid.min.css" rel="stylesheet"/>
+
+{% include 'DealsBot/dashboard/product_info_modal.html' %}
+
+<script>
+    // Store the complete data including descriptions
+    const sentDealsData = [
+        {% for item in sent_deals_data %}
+            [
+                "{{ item.brand | safe }}",
+                "{{ item.product  | safe }}",
+                "{{ item.category | safe }}",
+                "€{{ item.price | safe }}",
+                "{{ item.advertiser | safe }}",
+                "{{ item.valid_from | safe }}",
+                "{{ item.valid_thru | safe }}",
+                "{{ item.requires_loyalty_membership | safe }}",
+                "{{ item.description | safe }}",
+            ],
+        {% endfor %}
+    ];
+
+    // Modal handling functions
+    function showModal(data) {
+        const modal = document.getElementById('deal-modal');
+
+        document.getElementById('brand').textContent = data[0];
+        document.getElementById('product').textContent = data[1];
+        document.getElementById('category').textContent = data[2];
+        document.getElementById('price').textContent = data[3];
+        document.getElementById('advertiser').textContent = data[4];
+        document.getElementById('valid-from').textContent = data[5];
+        document.getElementById('valid-thru').textContent = data[6];
+        document.getElementById('loyalty').textContent = data[7];
+        document.getElementById('description').textContent = data[8];
+
+        modal.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            modal.querySelector('.modal-backdrop').classList.add('show');
+            modal.querySelector('.modal-content').classList.add('show');
+        });
+    }
+
+    function hideModal() {
+        const modal = document.getElementById('deal-modal');
+        if (!modal) return;
+
+        modal.querySelector('.modal-backdrop').classList.remove('show');
+        modal.querySelector('.modal-content').classList.remove('show');
+        setTimeout(() => modal.classList.add('hidden'), 200);
+    }
+
+
+    // Initialize Grid.js
+    new gridjs.Grid({
+        data: sentDealsData,
+        columns: [
+            "Brand",
+            "Product",
+            "Category",
+            "Price",
+            "Advertiser",
+            "Valid From",
+            "Valid Thru",
+            "Loyalty Only",
+            "Description",
+        ],
+        search: {
+            enabled: true,
+            keyword: '',
+        },
+        pagination: {
+            limit: 10,
+            enabled: true,
+            summary: true,
+        },
+        style: {
+            table: {
+                width: '100%',
+            },
+            td: {
+                border: '1px solid #ccc',
+            },
+        },
+        className: {
+            tr: 'cursor-pointer'
+        }
+    }).render(document.getElementById("active-deals-table"))
+
+    document.getElementById('active-deals-table').addEventListener('click', (event) => {
+        const row = event.target.closest('tr');
+        if (row && row.cells) {
+            const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
+
+            if (cells.length) showModal(cells);
+        }
+    });
+
+    document.getElementById('close-modal').addEventListener('click', hideModal);
+    document.getElementById('deal-modal').addEventListener('click', (event) => {
+        if (event.target.closest('.modal-content')) return;
+        hideModal();
+    });
+</script>

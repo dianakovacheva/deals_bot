@@ -2,9 +2,8 @@ from django.core.mail import send_mail
 from django.db import IntegrityError
 
 from DealsBot.db_utils.db_functions import save_sent_deal, save_user_sent_deal
-from DealsBot.models import DealSubscription, UserSentDeal, User, Profile, SentDeal
-from DealsBot.telegram_utils.telegram_functions import get_telegram_chat_id, \
-    send_telegram_message
+from DealsBot.models import DealSubscription, UserSentDeal, User, Profile, SentDeal, TelegramUser
+from DealsBot.telegram_utils.telegram_functions import send_telegram_message
 
 
 def get_active_deal_subscriptions():
@@ -31,12 +30,17 @@ def filter_out_user_sent_deals(unfiltered_list):
     return filtered_list
 
 
-def prepare_telegram_message(deal=None, search_params: dict = None):
+def prepare_telegram_message(deal=None, search_params: dict = None) -> list:
+    # Telegram has a message limit of 4096 chars, but formats HTML properly only up to 1695 chars.
+    # If deal information > 1695, then split the information into multiple messages
+    messages_holder = list()
     if "dealSubscriptionId" not in deal:
-        message = f"<b>Deals found for</b> <i>{search_params["product"]}</i> <b>in</b> <u>{search_params["zipcode"]}</u>\n\n"
+        init_message_found_deals = f"<b>Deals found for</b> <i>{search_params["product"]}</i> <b>in</b> <u>{search_params["zipcode"]}</u>\n\n"
     else:
         deal_subscription = DealSubscription.objects.get(id=deal["dealSubscriptionId"])
-        message = f"<b>Deals found for</b> <i>{deal_subscription.product}</i> <b>in</b> <u>{deal_subscription.zipcode}</u>\n\n"
+        init_message_found_deals = f"<b>Deals found for</b> <i>{deal_subscription.product}</i> <b>in</b> <u>{deal_subscription.zipcode}</u>\n\n"
+
+    message = init_message_found_deals
 
     for result in deal["results"]:
         brand = result['brand']
@@ -47,18 +51,25 @@ def prepare_telegram_message(deal=None, search_params: dict = None):
         start_date = result['validityDates'][0]['from'].strftime('%d.%m.%Y')
         end_date = result['validityDates'][0]['to'].strftime('%d.%m.%Y')
 
-        message += (
+        new_message_part = (
             f"<b>{brand} {product}</b>\n"
             f"{description}\n"
             f"<b>Price:</b> <u>€{price}</u>\n"
             f"<b>Store:</b> <i>{advertiser}</i>\n"
             f"<b>Valid:</b> <u>{start_date}</u> <b>to</b> <u>{end_date}</u>\n\n"
         )
-
         if result['requiresLoyaltyMembership']:
-            message += "<i>Membership required</i>"
+            new_message_part += "<i>Membership required</i>"
 
-    return message
+
+        if len(message) + len(new_message_part) > 1695:
+            messages_holder.append(message)
+            message = ''  # reset message content for following messages
+        else:
+            message += new_message_part
+
+    messages_holder.append(message)
+    return messages_holder
 
 
 def send_deal_per_email(deal):
@@ -99,9 +110,9 @@ def send_deal(deal):
 
 
 def send_deal_per_telegram(deal, profile):
-    user_telegram_username = profile.telegram_username
-    found_chat_id = get_telegram_chat_id(user_telegram_username)
-    print(found_chat_id)
-    if found_chat_id != -1:
-        formatted_message = prepare_telegram_message(deal)
-        send_telegram_message(found_chat_id, formatted_message)
+    telegram_user = TelegramUser.objects.get(id=profile.id)
+    chat_id = telegram_user.chat_id
+    if chat_id != -1:
+        formatted_messages = prepare_telegram_message(deal)
+        for message in formatted_messages:
+            send_telegram_message(chat_id, message)

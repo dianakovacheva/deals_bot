@@ -2,8 +2,8 @@ from asgiref.sync import sync_to_async
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes, MessageHandler, filters, ConversationHandler
 
-from DealsBot.db_utils.db_functions import create_bot_user, create_deal
-from DealsBot.models import BotUser, DealSubscription
+from DealsBot.db_utils.db_functions import create_telegram_user, create_deal
+from DealsBot.models import TelegramUser, DealSubscription, Profile
 from .search import ask_zip_code
 
 # Define states for the conversation
@@ -18,29 +18,31 @@ async def start_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Saves the zip code and performs the search."""
-    context.user_data['zip_code'] = update.message.text
-    product = context.user_data['product']
-    zip_code = context.user_data['zip_code']
+    context.user_data['zip_code'] = update.message.text.strip()
+    product = context.user_data['product'].strip()
+    zip_code = context.user_data['zip_code'].strip()
 
-    telegram_user_id = update.effective_user.id
-    telegram_username = update.effective_user.username
-    telegram_user_first_name = update.effective_user.first_name
-    telegram_user_last_name = update.effective_user.last_name
-    telegram_chat_id = update.effective_chat.id
+    user_id = update.effective_user.id
+    username = update.effective_user.username
+    user_first_name = update.effective_user.first_name
+    user_last_name = update.effective_user.last_name
+    chat_id = update.effective_chat.id
 
     # check if there is already a user with the given telegram user id
-    #  existing_user = BotUser.objects.get(telegram_user_id=telegram_user_id)
+    #  existing_user = BotUser.objects.get(user_id=user_id)
     try:
-        existing_user = await sync_to_async(BotUser.objects.get, thread_sensitive=True)(
-            telegram_user_id=telegram_user_id)
-    except BotUser.DoesNotExist:
+        existing_user = await sync_to_async(TelegramUser.objects.get, thread_sensitive=True)(
+            user_id=user_id)
+    except TelegramUser.DoesNotExist:
         existing_user = None
 
     if existing_user:
+        # get the corresponding Profile
+        profile = await sync_to_async(Profile.objects.get, thread_sensitive=True)(id=existing_user.id)
         # Check if the user has already subscribed for this product
         try:
             existing_deal = await sync_to_async(DealSubscription.objects.get, thread_sensitive=True)(
-                bot_user=existing_user,
+                profile=profile,
                 product=product,
                 zipcode=zip_code)
         except DealSubscription.DoesNotExist:
@@ -52,44 +54,36 @@ async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             return ConversationHandler.END
         # Check if the data for the user is current
         data_is_current = True
-        if existing_user.telegram_username != telegram_username:
-            existing_user.telegram_username = telegram_username
+        if existing_user.username != username:
+            existing_user.username = username
             data_is_current = False
-        if existing_user.telegram_user_first_name != telegram_user_first_name and telegram_user_first_name is not None:
-            existing_user.telegram_user_first_name = telegram_user_first_name
+        if existing_user.user_first_name != user_first_name and user_first_name is not None:
+            existing_user.user_first_name = user_first_name
             data_is_current = False
-        if existing_user.telegram_user_last_name != telegram_user_last_name and telegram_user_last_name is not None:
-            existing_user.telegram_user_last_name = telegram_user_last_name
+        if existing_user.user_last_name != user_last_name and user_last_name is not None:
+            existing_user.user_last_name = user_last_name
             data_is_current = False
-        if existing_user.telegram_chat_id != telegram_chat_id:
-            existing_user.telegram_chat_id = telegram_chat_id
+        if existing_user.chat_id != chat_id:
+            existing_user.chat_id = chat_id
             data_is_current = False
 
         if not data_is_current:
             # existing_user.save()
             await sync_to_async(existing_user.save, thread_sensitive=True)()
     else:
-        # existing_user = create_bot_user(telegram_username, telegram_user_id, telegram_user_first_name,
-        #                                 telegram_user_last_name,
-        #                                 telegram_chat_id)
-
         existing_user = await sync_to_async(
-            create_bot_user, thread_sensitive=True)(telegram_username, telegram_user_id, telegram_user_first_name,
-                                                    telegram_user_last_name,
-                                                    telegram_chat_id)
+            create_telegram_user, thread_sensitive=True)(username, user_id, user_first_name,
+                                                         user_last_name,
+                                                         chat_id)
 
-    # Create the subscription
-    # created_subscription = create_deal(bot_user=existing_user,
-    #                                    product=product,
-    #                                    zipcode=zip_code,
-    #                                    communication_channels="telegram")
+    # get the corresponding Profile
+    profile = await sync_to_async(Profile.objects.get, thread_sensitive=True)(id=existing_user.id)
 
     created_subscription = await sync_to_async(create_deal, thread_sensitive=True)(
         product=product,
         zipcode=zip_code,
         communication_channels="telegram",
-        bot_user=existing_user,
-        profile=None)
+        profile=profile)
 
     if created_subscription:
         await update.message.reply_text(f"Successfully subscribed for {product} in {zip_code}.")

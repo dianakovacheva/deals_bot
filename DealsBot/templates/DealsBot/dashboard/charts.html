@@ -201,10 +201,10 @@
         const data_values = Object.values(data_python);
 
         const data = {
-            labels: [data_labels, 'Email'],
+            labels: data_labels,
             datasets: [{
                 label: "Count",
-                data: [data_values, 4],
+                data: data_values,
                 hoverOffset: 4,
             }]
         };
